@@ -8,8 +8,8 @@
 let Module = require('module')
 const _require = Module.prototype.require
 Module.prototype.require = function (id) {
-  if (id === 'inline-style-prefixer') return {}
-  return _require.apply(this, arguments)
+    if (id === 'inline-style-prefixer') return {}
+    return _require.apply(this, arguments)
 }
 
 console.time('init')
@@ -34,6 +34,8 @@ const config = require('../config')
 const telemetry = require('./lib/telemetry')
 const sound = require('./lib/sound')
 const TorrentPlayer = require('./lib/torrent-player')
+
+const TorrentFetchController = require('./controllers/torrent-fetch-controller')
 
 // Perf optimization: Needed immediately, so do not lazy load it below
 const TorrentListController = require('./controllers/torrent-list-controller')
@@ -68,123 +70,126 @@ let app
 // Called once when the application loads. (Not once per window.)
 // Connects to the torrent networks, sets up the UI and OS integrations like
 // the dock icon and drag+drop.
-function onState (err, _state) {
-  if (err) return onError(err)
+function onState(err, _state) {
+    if (err) return onError(err)
 
-  // Make available for easier debugging
-  state = window.state = _state
-  window.dispatch = dispatch
+    // Make available for easier debugging
+    state = window.state = _state
+    window.dispatch = dispatch
 
-  telemetry.init(state)
+    telemetry.init(state)
 
-  // Log uncaught JS errors
-  window.addEventListener(
-    'error', (e) => telemetry.logUncaughtError('window', e), true /* capture */
-  )
+    // Log uncaught JS errors
+    window.addEventListener(
+        'error', (e) => telemetry.logUncaughtError('window', e), true /* capture */
+    )
 
-  // Create controllers
-  controllers = {
-    media: createGetter(() => {
-      const MediaController = require('./controllers/media-controller')
-      return new MediaController(state)
-    }),
-    playback: createGetter(() => {
-      const PlaybackController = require('./controllers/playback-controller')
-      return new PlaybackController(state, config, update)
-    }),
-    prefs: createGetter(() => {
-      const PrefsController = require('./controllers/prefs-controller')
-      return new PrefsController(state, config)
-    }),
-    subtitles: createGetter(() => {
-      const SubtitlesController = require('./controllers/subtitles-controller')
-      return new SubtitlesController(state)
-    }),
-    torrent: createGetter(() => {
-      const TorrentController = require('./controllers/torrent-controller')
-      return new TorrentController(state)
-    }),
-    torrentList: createGetter(() => {
-      return new TorrentListController(state)
-    }),
-    update: createGetter(() => {
-      const UpdateController = require('./controllers/update-controller')
-      return new UpdateController(state)
-    })
-  }
-
-  // Add first page to location history
-  state.location.go({
-    url: 'home',
-    setup: (cb) => {
-      state.window.title = config.APP_WINDOW_TITLE
-      cb(null)
+    // Create controllers
+    controllers = {
+        media: createGetter(() => {
+            const MediaController = require('./controllers/media-controller')
+            return new MediaController(state)
+        }),
+        playback: createGetter(() => {
+            const PlaybackController = require('./controllers/playback-controller')
+            return new PlaybackController(state, config, update)
+        }),
+        prefs: createGetter(() => {
+            const PrefsController = require('./controllers/prefs-controller')
+            return new PrefsController(state, config)
+        }),
+        subtitles: createGetter(() => {
+            const SubtitlesController = require('./controllers/subtitles-controller')
+            return new SubtitlesController(state)
+        }),
+        torrent: createGetter(() => {
+            const TorrentController = require('./controllers/torrent-controller')
+            return new TorrentController(state)
+        }),
+        torrentList: createGetter(() => {
+            return new TorrentListController(state)
+        }),
+        torrentFetch: createGetter(() => {
+            return new TorrentFetchController(state)
+        }),
+        update: createGetter(() => {
+            const UpdateController = require('./controllers/update-controller')
+            return new UpdateController(state)
+        })
     }
-  })
 
-  // Restart everything we were torrenting last time the app ran
-  resumeTorrents()
+    // Add first page to location history
+    state.location.go({
+        url: 'home',
+        setup: (cb) => {
+            state.window.title = config.APP_WINDOW_TITLE
+            cb(null)
+        }
+    })
 
-  // Initialize ReactDOM
-  app = ReactDOM.render(<App state={state} />, document.querySelector('#body'))
+    // Restart everything we were torrenting last time the app ran
+    resumeTorrents()
 
-  // Calling update() updates the UI given the current state
-  // Do this at least once a second to give every file in every torrentSummary
-  // a progress bar and to keep the cursor in sync when playing a video
-  setInterval(update, 1000)
+    // Initialize ReactDOM
+    app = ReactDOM.render(<App state={state}/>, document.querySelector('#body'))
 
-  // Listen for messages from the main process
-  setupIpc()
+    // Calling update() updates the UI given the current state
+    // Do this at least once a second to give every file in every torrentSummary
+    // a progress bar and to keep the cursor in sync when playing a video
+    setInterval(update, 1000)
 
-  // Drag and drop files/text to start torrenting or seeding
-  dragDrop('body', {
-    onDrop: onOpen,
-    onDropText: onOpen
-  })
+    // Listen for messages from the main process
+    setupIpc()
 
-  // ...same thing if you paste a torrent
-  document.addEventListener('paste', onPaste)
+    // Drag and drop files/text to start torrenting or seeding
+    dragDrop('body', {
+        onDrop: onOpen,
+        onDropText: onOpen
+    })
 
-  // ...focus and blur. Needed to show correct dock icon text ('badge') in OSX
-  window.addEventListener('focus', onFocus)
-  window.addEventListener('blur', onBlur)
+    // ...same thing if you paste a torrent
+    document.addEventListener('paste', onPaste)
 
-  if (electron.remote.getCurrentWindow().isVisible()) {
-    sound.play('STARTUP')
-  }
+    // ...focus and blur. Needed to show correct dock icon text ('badge') in OSX
+    window.addEventListener('focus', onFocus)
+    window.addEventListener('blur', onBlur)
 
-  // To keep app startup fast, some code is delayed.
-  window.setTimeout(delayedInit, config.DELAYED_INIT)
+    if (electron.remote.getCurrentWindow().isVisible()) {
+        sound.play('STARTUP')
+    }
 
-  // Done! Ideally we want to get here < 500ms after the user clicks the app
-  console.timeEnd('init')
+    // To keep app startup fast, some code is delayed.
+    window.setTimeout(delayedInit, config.DELAYED_INIT)
+
+    // Done! Ideally we want to get here < 500ms after the user clicks the app
+    console.timeEnd('init')
 }
 
 // Runs a few seconds after the app loads, to avoid slowing down startup time
-function delayedInit () {
-  telemetry.send(state)
+function delayedInit() {
+    telemetry.send(state)
 
-  // Send telemetry data every 12 hours, for users who keep the app running
-  // for extended periods of time
-  setInterval(() => telemetry.send(state), 12 * 3600 * 1000)
+    // Send telemetry data every 12 hours, for users who keep the app running
+    // for extended periods of time
+    setInterval(() => telemetry.send(state), 12 * 3600 * 1000)
 
-  // Warn if the download dir is gone, eg b/c an external drive is unplugged
-  checkDownloadPath()
+    // Warn if the download dir is gone, eg b/c an external drive is unplugged
+    checkDownloadPath()
 
-  // ...window visibility state.
-  document.addEventListener('webkitvisibilitychange', onVisibilityChange)
-  onVisibilityChange()
+    // ...window visibility state.
+    document.addEventListener('webkitvisibilitychange', onVisibilityChange)
+    onVisibilityChange()
 
-  lazyLoadCast()
+    lazyLoadCast()
 }
 
 // Lazily loads Chromecast and Airplay support
-function lazyLoadCast () {
-  if (!Cast) {
-    Cast = require('./lib/cast')
-    Cast.init(state, update) // Search the local network for Chromecast and Airplays
-  }
-  return Cast
+function lazyLoadCast() {
+    if (!Cast) {
+        Cast = require('./lib/cast')
+        Cast.init(state, update) // Search the local network for Chromecast and Airplays
+    }
+    return Cast
 }
 
 // React loop:
@@ -192,332 +197,361 @@ function lazyLoadCast () {
 // 2. event - might be a click or other DOM event, or something external
 // 3. dispatch - the event handler calls dispatch(), main.js sends it to a controller
 // 4. controller - the controller handles the event, changing the state object
-function update () {
-  controllers.playback().showOrHidePlayerControls()
-  app.setState(state)
-  updateElectron()
+function update() {
+    controllers.playback().showOrHidePlayerControls()
+    app.setState(state)
+    updateElectron()
 }
 
 // Some state changes can't be reflected in the DOM, instead we have to
 // tell the main process to update the window or OS integrations
-function updateElectron () {
-  if (state.window.title !== state.prev.title) {
-    state.prev.title = state.window.title
-    ipcRenderer.send('setTitle', state.window.title)
-  }
-  if (state.dock.progress.toFixed(2) !== state.prev.progress.toFixed(2)) {
-    state.prev.progress = state.dock.progress
-    ipcRenderer.send('setProgress', state.dock.progress)
-  }
-  if (state.dock.badge !== state.prev.badge) {
-    state.prev.badge = state.dock.badge
-    ipcRenderer.send('setBadge', state.dock.badge || 0)
-  }
+function updateElectron() {
+    if (state.window.title !== state.prev.title) {
+        state.prev.title = state.window.title
+        ipcRenderer.send('setTitle', state.window.title)
+    }
+    if (state.dock.progress.toFixed(2) !== state.prev.progress.toFixed(2)) {
+        state.prev.progress = state.dock.progress
+        ipcRenderer.send('setProgress', state.dock.progress)
+    }
+    if (state.dock.badge !== state.prev.badge) {
+        state.prev.badge = state.dock.badge
+        ipcRenderer.send('setBadge', state.dock.badge || 0)
+    }
 }
 
 const dispatchHandlers = {
-  // Torrent list: creating, deleting, selecting torrents
-  'openTorrentFile': () => ipcRenderer.send('openTorrentFile'),
-  'openFiles': () => ipcRenderer.send('openFiles'), /* shows the open file dialog */
-  'openTorrentAddress': () => { state.modal = { id: 'open-torrent-address-modal' } },
+    // Torrent list: creating, deleting, selecting torrents
+    'openTorrentFile': () => ipcRenderer.send('openTorrentFile'),
+    'openFiles': () => ipcRenderer.send('openFiles'), /* shows the open file dialog */
+    'openTorrentAddress': () => {
+        state.modal = {id: 'open-torrent-address-modal'}
+    },
 
-  'addTorrent': (torrentId) => controllers.torrentList().addTorrent(torrentId),
-  'showCreateTorrent': (paths) => controllers.torrentList().showCreateTorrent(paths),
-  'createTorrent': (options) => controllers.torrentList().createTorrent(options),
-  'toggleTorrent': (infoHash) => controllers.torrentList().toggleTorrent(infoHash),
-  'pauseAllTorrents': () => controllers.torrentList().pauseAllTorrents(),
-  'resumeAllTorrents': () => controllers.torrentList().resumeAllTorrents(),
-  'toggleTorrentFile': (infoHash, index) =>
-    controllers.torrentList().toggleTorrentFile(infoHash, index),
-  'confirmDeleteTorrent': (infoHash, deleteData) =>
-    controllers.torrentList().confirmDeleteTorrent(infoHash, deleteData),
-  'deleteTorrent': (infoHash, deleteData) =>
-    controllers.torrentList().deleteTorrent(infoHash, deleteData),
-  'toggleSelectTorrent': (infoHash) =>
-    controllers.torrentList().toggleSelectTorrent(infoHash),
-  'openTorrentContextMenu': (infoHash) =>
-    controllers.torrentList().openTorrentContextMenu(infoHash),
-  'startTorrentingSummary': (torrentKey) =>
-    controllers.torrentList().startTorrentingSummary(torrentKey),
-  'saveTorrentFileAs': (torrentKey) =>
-    controllers.torrentList().saveTorrentFileAs(torrentKey),
+    'addTorrent': (torrentId) => controllers.torrentList().addTorrent(torrentId),
+    'showCreateTorrent': (paths) => controllers.torrentList().showCreateTorrent(paths),
+    'createTorrent': (options) => controllers.torrentList().createTorrent(options),
+    'toggleTorrent': (infoHash) => controllers.torrentList().toggleTorrent(infoHash),
+    'pauseAllTorrents': () => controllers.torrentList().pauseAllTorrents(),
+    'resumeAllTorrents': () => controllers.torrentList().resumeAllTorrents(),
+    'toggleTorrentFile': (infoHash, index) =>
+        controllers.torrentList().toggleTorrentFile(infoHash, index),
+    'confirmDeleteTorrent': (infoHash, deleteData) =>
+        controllers.torrentList().confirmDeleteTorrent(infoHash, deleteData),
+    'deleteTorrent': (infoHash, deleteData) =>
+        controllers.torrentList().deleteTorrent(infoHash, deleteData),
+    'toggleSelectTorrent': (infoHash) =>
+        controllers.torrentList().toggleSelectTorrent(infoHash),
+    'openTorrentContextMenu': (infoHash) =>
+        controllers.torrentList().openTorrentContextMenu(infoHash),
+    'startTorrentingSummary': (torrentKey) =>
+        controllers.torrentList().startTorrentingSummary(torrentKey),
+    'saveTorrentFileAs': (torrentKey) =>
+        controllers.torrentList().saveTorrentFileAs(torrentKey),
 
-  // Playback
-  'playFile': (infoHash, index) => controllers.playback().playFile(infoHash, index),
-  'playPause': () => controllers.playback().playPause(),
-  'nextTrack': () => controllers.playback().nextTrack(),
-  'previousTrack': () => controllers.playback().previousTrack(),
-  'skip': (time) => controllers.playback().skip(time),
-  'skipTo': (time) => controllers.playback().skipTo(time),
-  'changePlaybackRate': (dir) => controllers.playback().changePlaybackRate(dir),
-  'changeVolume': (delta) => controllers.playback().changeVolume(delta),
-  'setVolume': (vol) => controllers.playback().setVolume(vol),
-  'openItem': (infoHash, index) => controllers.playback().openItem(infoHash, index),
+    // Playback
+    'playFile': (infoHash, index) => controllers.playback().playFile(infoHash, index),
+    'playPause': () => controllers.playback().playPause(),
+    'nextTrack': () => controllers.playback().nextTrack(),
+    'previousTrack': () => controllers.playback().previousTrack(),
+    'skip': (time) => controllers.playback().skip(time),
+    'skipTo': (time) => controllers.playback().skipTo(time),
+    'changePlaybackRate': (dir) => controllers.playback().changePlaybackRate(dir),
+    'changeVolume': (delta) => controllers.playback().changeVolume(delta),
+    'setVolume': (vol) => controllers.playback().setVolume(vol),
+    'openItem': (infoHash, index) => controllers.playback().openItem(infoHash, index),
 
-  // Subtitles
-  'openSubtitles': () => controllers.subtitles().openSubtitles(),
-  'selectSubtitle': (index) => controllers.subtitles().selectSubtitle(index),
-  'toggleSubtitlesMenu': () => controllers.subtitles().toggleSubtitlesMenu(),
-  'checkForSubtitles': () => controllers.subtitles().checkForSubtitles(),
-  'addSubtitles': (files, autoSelect) => controllers.subtitles().addSubtitles(files, autoSelect),
+    // Subtitles
+    'openSubtitles': () => controllers.subtitles().openSubtitles(),
+    'selectSubtitle': (index) => controllers.subtitles().selectSubtitle(index),
+    'toggleSubtitlesMenu': () => controllers.subtitles().toggleSubtitlesMenu(),
+    'checkForSubtitles': () => controllers.subtitles().checkForSubtitles(),
+    'addSubtitles': (files, autoSelect) => controllers.subtitles().addSubtitles(files, autoSelect),
 
-  // Local media: <video>, <audio>, external players
-  'mediaStalled': () => controllers.media().mediaStalled(),
-  'mediaError': (err) => controllers.media().mediaError(err),
-  'mediaSuccess': () => controllers.media().mediaSuccess(),
-  'mediaTimeUpdate': () => controllers.media().mediaTimeUpdate(),
-  'mediaMouseMoved': () => controllers.media().mediaMouseMoved(),
-  'mediaControlsMouseEnter': () => controllers.media().controlsMouseEnter(),
-  'mediaControlsMouseLeave': () => controllers.media().controlsMouseLeave(),
-  'openExternalPlayer': () => controllers.media().openExternalPlayer(),
-  'externalPlayerNotFound': () => controllers.media().externalPlayerNotFound(),
+    // Local media: <video>, <audio>, external players
+    'mediaStalled': () => controllers.media().mediaStalled(),
+    'mediaError': (err) => controllers.media().mediaError(err),
+    'mediaSuccess': () => controllers.media().mediaSuccess(),
+    'mediaTimeUpdate': () => controllers.media().mediaTimeUpdate(),
+    'mediaMouseMoved': () => controllers.media().mediaMouseMoved(),
+    'mediaControlsMouseEnter': () => controllers.media().controlsMouseEnter(),
+    'mediaControlsMouseLeave': () => controllers.media().controlsMouseLeave(),
+    'openExternalPlayer': () => controllers.media().openExternalPlayer(),
+    'externalPlayerNotFound': () => controllers.media().externalPlayerNotFound(),
 
-  // Remote casting: Chromecast, Airplay, etc
-  'toggleCastMenu': (deviceType) => lazyLoadCast().toggleMenu(deviceType),
-  'selectCastDevice': (index) => lazyLoadCast().selectDevice(index),
-  'stopCasting': () => lazyLoadCast().stop(),
+    // Remote casting: Chromecast, Airplay, etc
+    'toggleCastMenu': (deviceType) => lazyLoadCast().toggleMenu(deviceType),
+    'selectCastDevice': (index) => lazyLoadCast().selectDevice(index),
+    'stopCasting': () => lazyLoadCast().stop(),
 
-  // Preferences screen
-  'preferences': () => controllers.prefs().show(),
-  'updatePreferences': (key, value) => controllers.prefs().update(key, value),
-  'checkDownloadPath': checkDownloadPath,
+    // Preferences screen
+    'preferences': () => controllers.prefs().show(),
+    'updatePreferences': (key, value) => controllers.prefs().update(key, value),
+    'checkDownloadPath': checkDownloadPath,
 
-  // Update (check for new versions on Linux, where there's no auto updater)
-  'updateAvailable': (version) => controllers.update().updateAvailable(version),
-  'skipVersion': (version) => controllers.update().skipVersion(version),
+    // Update (check for new versions on Linux, where there's no auto updater)
+    'updateAvailable': (version) => controllers.update().updateAvailable(version),
+    'skipVersion': (version) => controllers.update().skipVersion(version),
 
-  // Navigation between screens (back, forward, ESC, etc)
-  'exitModal': () => { state.modal = null },
-  'backToList': backToList,
-  'escapeBack': escapeBack,
-  'back': () => state.location.back(),
-  'forward': () => state.location.forward(),
-  'cancel': () => state.location.cancel(),
+    // Navigation between screens (back, forward, ESC, etc)
+    'exitModal': () => {
+        state.modal = null
+    },
+    'backToList': backToList,
+    'escapeBack': escapeBack,
+    'back': () => state.location.back(),
+    'forward': () => state.location.forward(),
+    'cancel': () => state.location.cancel(),
 
-  // Controlling the window
-  'setDimensions': setDimensions,
-  'toggleFullScreen': (setTo) => ipcRenderer.send('toggleFullScreen', setTo),
-  'setTitle': (title) => { state.window.title = title },
-  'resetTitle': () => { state.window.title = config.APP_WINDOW_TITLE },
+    // Controlling the window
+    'setDimensions': setDimensions,
+    'toggleFullScreen': (setTo) => ipcRenderer.send('toggleFullScreen', setTo),
+    'setTitle': (title) => {
+        state.window.title = title
+    },
+    'resetTitle': () => {
+        state.window.title = config.APP_WINDOW_TITLE
+    },
 
-  // Everything else
-  'onOpen': onOpen,
-  'error': onError,
-  'uncaughtError': (proc, err) => telemetry.logUncaughtError(proc, err),
-  'stateSave': () => State.save(state),
-  'stateSaveImmediate': () => State.saveImmediate(state),
-  'update': () => {} // No-op, just trigger an update
+    // Everything else
+    'onOpen': onOpen,
+    'error': onError,
+    'uncaughtError': (proc, err) => telemetry.logUncaughtError(proc, err),
+    'stateSave': () => State.save(state),
+    'stateSaveImmediate': () => State.saveImmediate(state),
+    'update': () => {
+    }, // No-op, just trigger an update
+
+    'addTorrentList': (data) => {
+        if (state.torrentList) {
+            state.torrentList = [...state.torrentList, ...data];
+        }
+        else {
+            state.torrentList = data;
+        }
+        state.torrentListRequest = 'success';
+    },
+    'torrentDetail': (torrent) => {
+        state.torrentDetail = torrent;
+        state.location.go({url: 'torrent-detail-page'})
+    },
+    'torrentFetchMetaDataRequest': (torrentLink) => {
+        controllers.torrentFetch().getMetaData(torrentLink)
+    },
+    'torrentFetchMetaDataSuccess': (metaInfo) => {
+        state.torrentDetail.meta = metaInfo;
+    }
 }
 
 // Events from the UI never modify state directly. Instead they call dispatch()
-function dispatch (action, ...args) {
-  // Log dispatch calls, for debugging, but don't spam
-  if (!['mediaMouseMoved', 'mediaTimeUpdate', 'update'].includes(action)) {
-    console.log('dispatch: %s %o', action, args)
-  }
+function dispatch(action, ...args) {
+    // Log dispatch calls, for debugging, but don't spam
+    if (!['mediaMouseMoved', 'mediaTimeUpdate', 'update'].includes(action)) {
+        console.log('dispatch: %s %o', action, args)
+    }
 
-  const handler = dispatchHandlers[action]
-  if (handler) handler(...args)
-  else console.error('Missing dispatch handler: ' + action)
+    const handler = dispatchHandlers[action]
+    if (handler) handler(...args)
+    else console.error('Missing dispatch handler: ' + action)
 
-  // Update the virtual DOM, unless it's just a mouse move event
-  if (action !== 'mediaMouseMoved' ||
-      controllers.playback().showOrHidePlayerControls()) {
-    update()
-  }
+    // Update the virtual DOM, unless it's just a mouse move event
+    if (action !== 'mediaMouseMoved' ||
+        controllers.playback().showOrHidePlayerControls()) {
+        update()
+    }
 }
 
 // Listen to events from the main and webtorrent processes
-function setupIpc () {
-  ipcRenderer.on('log', (e, ...args) => console.log(...args))
-  ipcRenderer.on('error', (e, ...args) => console.error(...args))
+function setupIpc() {
+    ipcRenderer.on('log', (e, ...args) => console.log(...args))
+    ipcRenderer.on('error', (e, ...args) => console.error(...args))
 
-  ipcRenderer.on('dispatch', (e, ...args) => dispatch(...args))
+    ipcRenderer.on('dispatch', (e, ...args) => dispatch(...args))
 
-  ipcRenderer.on('fullscreenChanged', onFullscreenChanged)
-  ipcRenderer.on('windowBoundsChanged', onWindowBoundsChanged)
+    ipcRenderer.on('fullscreenChanged', onFullscreenChanged)
+    ipcRenderer.on('windowBoundsChanged', onWindowBoundsChanged)
 
-  const tc = controllers.torrent()
-  ipcRenderer.on('wt-infohash', (e, ...args) => tc.torrentInfoHash(...args))
-  ipcRenderer.on('wt-metadata', (e, ...args) => tc.torrentMetadata(...args))
-  ipcRenderer.on('wt-done', (e, ...args) => tc.torrentDone(...args))
-  ipcRenderer.on('wt-warning', (e, ...args) => tc.torrentWarning(...args))
-  ipcRenderer.on('wt-error', (e, ...args) => tc.torrentError(...args))
+    const tc = controllers.torrent()
+    ipcRenderer.on('wt-infohash', (e, ...args) => tc.torrentInfoHash(...args))
+    ipcRenderer.on('wt-metadata', (e, ...args) => tc.torrentMetadata(...args))
+    ipcRenderer.on('wt-done', (e, ...args) => tc.torrentDone(...args))
+    ipcRenderer.on('wt-warning', (e, ...args) => tc.torrentWarning(...args))
+    ipcRenderer.on('wt-error', (e, ...args) => tc.torrentError(...args))
 
-  ipcRenderer.on('wt-progress', (e, ...args) => tc.torrentProgress(...args))
-  ipcRenderer.on('wt-file-modtimes', (e, ...args) => tc.torrentFileModtimes(...args))
-  ipcRenderer.on('wt-file-saved', (e, ...args) => tc.torrentFileSaved(...args))
-  ipcRenderer.on('wt-poster', (e, ...args) => tc.torrentPosterSaved(...args))
-  ipcRenderer.on('wt-audio-metadata', (e, ...args) => tc.torrentAudioMetadata(...args))
-  ipcRenderer.on('wt-server-running', (e, ...args) => tc.torrentServerRunning(...args))
+    ipcRenderer.on('wt-progress', (e, ...args) => tc.torrentProgress(...args))
+    ipcRenderer.on('wt-file-modtimes', (e, ...args) => tc.torrentFileModtimes(...args))
+    ipcRenderer.on('wt-file-saved', (e, ...args) => tc.torrentFileSaved(...args))
+    ipcRenderer.on('wt-poster', (e, ...args) => tc.torrentPosterSaved(...args))
+    ipcRenderer.on('wt-audio-metadata', (e, ...args) => tc.torrentAudioMetadata(...args))
+    ipcRenderer.on('wt-server-running', (e, ...args) => tc.torrentServerRunning(...args))
 
-  ipcRenderer.on('wt-uncaught-error', (e, err) => telemetry.logUncaughtError('webtorrent', err))
+    ipcRenderer.on('wt-uncaught-error', (e, err) => telemetry.logUncaughtError('webtorrent', err))
 
-  ipcRenderer.send('ipcReady')
+    ipcRenderer.send('ipcReady')
 
-  State.on('stateSaved', () => ipcRenderer.send('stateSaved'))
+    State.on('stateSaved', () => ipcRenderer.send('stateSaved'))
 }
 
 // Quits any modal popovers and returns to the torrent list screen
-function backToList () {
-  // Exit any modals and screens with a back button
-  state.modal = null
-  state.location.backToFirst(function () {
-    // If we were already on the torrent list, scroll to the top
-    const contentTag = document.querySelector('.content')
-    if (contentTag) contentTag.scrollTop = 0
-  })
+function backToList() {
+    // Exit any modals and screens with a back button
+    state.modal = null
+    state.location.backToFirst(function () {
+        // If we were already on the torrent list, scroll to the top
+        const contentTag = document.querySelector('.content')
+        if (contentTag) contentTag.scrollTop = 0
+    })
 }
 
 // Quits modals, full screen, or goes back. Happens when the user hits ESC
-function escapeBack () {
-  if (state.modal) {
-    dispatch('exitModal')
-  } else if (state.window.isFullScreen) {
-    dispatch('toggleFullScreen')
-  } else {
-    dispatch('back')
-  }
+function escapeBack() {
+    if (state.modal) {
+        dispatch('exitModal')
+    } else if (state.window.isFullScreen) {
+        dispatch('toggleFullScreen')
+    } else {
+        dispatch('back')
+    }
 }
 
 // Starts all torrents that aren't paused on program startup
-function resumeTorrents () {
-  state.saved.torrents
-    .map((torrentSummary) => {
-      // Torrent keys are ephemeral, reassigned each time the app runs.
-      // On startup, give all torrents a key, even the ones that are paused.
-      torrentSummary.torrentKey = state.nextTorrentKey++
-      return torrentSummary
-    })
-    .filter((s) => s.status !== 'paused')
-    .forEach((s) => controllers.torrentList().startTorrentingSummary(s.torrentKey))
+function resumeTorrents() {
+    state.saved.torrents
+        .map((torrentSummary) => {
+            // Torrent keys are ephemeral, reassigned each time the app runs.
+            // On startup, give all torrents a key, even the ones that are paused.
+            torrentSummary.torrentKey = state.nextTorrentKey++
+            return torrentSummary
+        })
+        .filter((s) => s.status !== 'paused')
+        .forEach((s) => controllers.torrentList().startTorrentingSummary(s.torrentKey))
 }
 
 // Set window dimensions to match video dimensions or fill the screen
-function setDimensions (dimensions) {
-  // Don't modify the window size if it's already maximized
-  if (electron.remote.getCurrentWindow().isMaximized()) {
-    state.window.bounds = null
-    return
-  }
+function setDimensions(dimensions) {
+    // Don't modify the window size if it's already maximized
+    if (electron.remote.getCurrentWindow().isMaximized()) {
+        state.window.bounds = null
+        return
+    }
 
-  // Save the bounds of the window for later. See restoreBounds()
-  state.window.bounds = {
-    x: window.screenX,
-    y: window.screenY,
-    width: window.outerWidth,
-    height: window.outerHeight
-  }
-  state.window.wasMaximized = electron.remote.getCurrentWindow().isMaximized
+    // Save the bounds of the window for later. See restoreBounds()
+    state.window.bounds = {
+        x: window.screenX,
+        y: window.screenY,
+        width: window.outerWidth,
+        height: window.outerHeight
+    }
+    state.window.wasMaximized = electron.remote.getCurrentWindow().isMaximized
 
-  // Limit window size to screen size
-  const screenWidth = window.screen.width
-  const screenHeight = window.screen.height
-  const aspectRatio = dimensions.width / dimensions.height
-  const scaleFactor = Math.min(
-    Math.min(screenWidth / dimensions.width, 1),
-    Math.min(screenHeight / dimensions.height, 1)
-  )
-  const width = Math.max(
-    Math.floor(dimensions.width * scaleFactor),
-    config.WINDOW_MIN_WIDTH
-  )
-  const height = Math.max(
-    Math.floor(dimensions.height * scaleFactor),
-    config.WINDOW_MIN_HEIGHT
-  )
+    // Limit window size to screen size
+    const screenWidth = window.screen.width
+    const screenHeight = window.screen.height
+    const aspectRatio = dimensions.width / dimensions.height
+    const scaleFactor = Math.min(
+        Math.min(screenWidth / dimensions.width, 1),
+        Math.min(screenHeight / dimensions.height, 1)
+    )
+    const width = Math.max(
+        Math.floor(dimensions.width * scaleFactor),
+        config.WINDOW_MIN_WIDTH
+    )
+    const height = Math.max(
+        Math.floor(dimensions.height * scaleFactor),
+        config.WINDOW_MIN_HEIGHT
+    )
 
-  ipcRenderer.send('setAspectRatio', aspectRatio)
-  ipcRenderer.send('setBounds', {contentBounds: true, x: null, y: null, width, height})
-  state.playing.aspectRatio = aspectRatio
+    ipcRenderer.send('setAspectRatio', aspectRatio)
+    ipcRenderer.send('setBounds', {contentBounds: true, x: null, y: null, width, height})
+    state.playing.aspectRatio = aspectRatio
 }
 
 // Called when the user adds files (.torrent, files to seed, subtitles) to the app
 // via any method (drag-drop, drag to app icon, command line)
-function onOpen (files) {
-  if (!Array.isArray(files)) files = [ files ]
+function onOpen(files) {
+    if (!Array.isArray(files)) files = [files]
 
-  const url = state.location.url()
-  const allTorrents = files.every(TorrentPlayer.isTorrent)
-  const allSubtitles = files.every(controllers.subtitles().isSubtitle)
+    const url = state.location.url()
+    const allTorrents = files.every(TorrentPlayer.isTorrent)
+    const allSubtitles = files.every(controllers.subtitles().isSubtitle)
 
-  if (allTorrents) {
-    // Drop torrents onto the app: go to home screen, add torrents, no matter what
-    dispatch('backToList')
-    // All .torrent files? Add them.
-    files.forEach((file) => controllers.torrentList().addTorrent(file))
-  } else if (url === 'player' && allSubtitles) {
-    // Drop subtitles onto a playing video: add subtitles
-    controllers.subtitles().addSubtitles(files, true)
-  } else if (url === 'home') {
-    // Drop files onto home screen: show Create Torrent
-    state.modal = null
-    controllers.torrentList().showCreateTorrent(files)
-  } else {
-    // Drop files onto any other screen: show error
-    return onError('Please go back to the torrent list before creating a new torrent.')
-  }
-
-  update()
-}
-
-function onError (err) {
-  console.error(err.stack || err)
-  sound.play('ERROR')
-  state.errors.push({
-    time: new Date().getTime(),
-    message: err.message || err
-  })
-
-  update()
-}
-
-function onPaste (e) {
-  if (e.target.tagName.toLowerCase() === 'input') return
-  controllers.torrentList().addTorrent(electron.clipboard.readText())
-
-  update()
-}
-
-function onFocus (e) {
-  state.window.isFocused = true
-  state.dock.badge = 0
-  update()
-}
-
-function onBlur () {
-  state.window.isFocused = false
-  update()
-}
-
-function onVisibilityChange () {
-  state.window.isVisible = !document.webkitHidden
-}
-
-function onFullscreenChanged (e, isFullScreen) {
-  state.window.isFullScreen = isFullScreen
-  if (!isFullScreen) {
-    // Aspect ratio gets reset in fullscreen mode, so restore it (Mac)
-    ipcRenderer.send('setAspectRatio', state.playing.aspectRatio)
-  }
-
-  update()
-}
-
-function onWindowBoundsChanged (e, newBounds) {
-  if (state.location.url() !== 'player') {
-    state.saved.bounds = newBounds
-    dispatch('stateSave')
-  }
-}
-
-function checkDownloadPath () {
-  fs.stat(state.saved.prefs.downloadPath, function (err, stat) {
-    if (err) {
-      state.downloadPathStatus = 'missing'
-      return console.error(err)
+    if (allTorrents) {
+        // Drop torrents onto the app: go to home screen, add torrents, no matter what
+        dispatch('backToList')
+        // All .torrent files? Add them.
+        files.forEach((file) => controllers.torrentList().addTorrent(file))
+    } else if (url === 'player' && allSubtitles) {
+        // Drop subtitles onto a playing video: add subtitles
+        controllers.subtitles().addSubtitles(files, true)
+    } else if (url === 'home') {
+        // Drop files onto home screen: show Create Torrent
+        state.modal = null
+        controllers.torrentList().showCreateTorrent(files)
+    } else {
+        // Drop files onto any other screen: show error
+        return onError('Please go back to the torrent list before creating a new torrent.')
     }
-    if (stat.isDirectory()) state.downloadPathStatus = 'ok'
-    else state.downloadPathStatus = 'missing'
-  })
+
+    update()
+}
+
+function onError(err) {
+    console.error(err.stack || err)
+    sound.play('ERROR')
+    state.errors.push({
+        time: new Date().getTime(),
+        message: err.message || err
+    })
+
+    update()
+}
+
+function onPaste(e) {
+    if (e.target.tagName.toLowerCase() === 'input') return
+    controllers.torrentList().addTorrent(electron.clipboard.readText())
+
+    update()
+}
+
+function onFocus(e) {
+    state.window.isFocused = true
+    state.dock.badge = 0
+    update()
+}
+
+function onBlur() {
+    state.window.isFocused = false
+    update()
+}
+
+function onVisibilityChange() {
+    state.window.isVisible = !document.webkitHidden
+}
+
+function onFullscreenChanged(e, isFullScreen) {
+    state.window.isFullScreen = isFullScreen
+    if (!isFullScreen) {
+        // Aspect ratio gets reset in fullscreen mode, so restore it (Mac)
+        ipcRenderer.send('setAspectRatio', state.playing.aspectRatio)
+    }
+
+    update()
+}
+
+function onWindowBoundsChanged(e, newBounds) {
+    if (state.location.url() !== 'player') {
+        state.saved.bounds = newBounds
+        dispatch('stateSave')
+    }
+}
+
+function checkDownloadPath() {
+    fs.stat(state.saved.prefs.downloadPath, function (err, stat) {
+        if (err) {
+            state.downloadPathStatus = 'missing'
+            return console.error(err)
+        }
+        if (stat.isDirectory()) state.downloadPathStatus = 'ok'
+        else state.downloadPathStatus = 'missing'
+    })
 }

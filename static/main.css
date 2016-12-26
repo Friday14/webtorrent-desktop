@@ -16,7 +16,7 @@ body {
   margin: 0;
   padding: 0;
   width: 100%;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .app {
@@ -943,4 +943,25 @@ video::-webkit-media-text-track-container {
 
 .control * {
   cursor: default !important;
+}
+.movie img {
+  height: 90%;
+  width: 170px;
+}
+
+.movie {
+  float: left;
+  padding: 10px;
+  width: 18%;
+  height: 291px;
+}
+
+.bottom{
+  height: 60px;
+  background: #333;
+}
+
+.bottom .text{
+  position: absolute;
+  bottom: 0;
 }
