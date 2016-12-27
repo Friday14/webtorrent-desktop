@@ -1,12 +1,11 @@
-const fs = require('fs')
-const path = require('path')
 const electron = require('electron')
 
 const {dispatch} = require('../lib/dispatcher')
 const {TorrentKeyNotFoundError} = require('../lib/errors')
 const sound = require('../lib/sound')
 const TorrentSummary = require('../lib/torrent-summary')
-
+const request = require('request');
+const cheerio = require('cheerio');
 const ipcRenderer = electron.ipcRenderer
 
 
@@ -17,47 +16,44 @@ module.exports = class TorrentFetchController {
     }
 
     getMetaData(torrentLink) {
-        var http = require('http');
-        let meta = [];
-
         var options = {
-            host: 'www.torrentino.me',
+            host: 'http://www.torrentino.me',
             path: torrentLink
-        }
+        };
+        let meta = [];
+        let magnet;
+        let url = options.host + options.path;
+        //'audio', 'video', 'languages', 'size' magnet
+        request(url, function (error, response, body) {
+            let $ = cheerio.load(body);
+            $(".plate.list-start").find('tr').map((key, item) => {
+                let elem = $(item);
+                if (magnet = elem.find('.download a').attr('data-default')) {
 
-        var request = http.request(options, function (res) {
-            let data = '';
-            res.on('data', function (chunk) {
-                data += chunk;
-            });
-            res.on('end', function () {
-                let DomParser = require('dom-parser');
-                let parser = new DomParser();
-                let dom = parser.parseFromString(data);
-                meta = dom.getElementsByTagName('tr').map(function (raw) {
-                    let magnet = raw.getElementsByClassName('download')[0]
-                    let link = null;
-                    if (magnet)
-                       link = (link = magnet.getElementsByTagName('a')[0]) ? link.getAttribute('data-default') : null;
+                    let urlGetFilesList = elem.find('td.consistence a').attr('data-route');
+                    let files = [];
+                    request(urlGetFilesList, function (err, res, body) {
+                        files = JSON.parse(body)
 
-                    let params = ['audio', 'video', 'languages', 'size'];
-                    let data = {};
-                    params.map(function (param) {
-                        let node = raw.getElementsByClassName(param)[0]
-                        if (node){
-                            data[param]= node.innerHTML;
-                        }
+
+                        meta[meta.length] = {
+                            video: elem.find('td.video').text(),
+                            audio: elem.find('td.audio').text(),
+                            languages: elem.find('td.languages').text(),
+                            size: elem.find('td.size').text(),
+                            seed: elem.find('td.seed-leech .seed').text(),
+                            leech: elem.find('td.seed-leech .leech').text(),
+                            magnet: magnet,
+                            files: files.files
+                        };
                     });
+                }
 
-                    data.magnet = link;
-                    return data;
-                });
-                dispatch('torrentFetchMetaDataSuccess', meta);
             });
+            console.log(meta);
+            dispatch('torrentFetchMetaDataSuccess', meta);
+            // dispatch('addTorrentList', arrayMovies);
         });
-        request.on('error', function (e) {
-            console.log(e.message);
-        });
-        request.end();
     }
 }
+//                dispatch('torrentFetchMetaDataSuccess', meta);

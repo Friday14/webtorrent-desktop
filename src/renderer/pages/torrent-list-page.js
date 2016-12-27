@@ -1,13 +1,13 @@
 const React = require('react')
-const prettyBytes = require('prettier-bytes')
+// import {GridList, GridTile} from '';
+const GridComponent = require('material-ui/GridList');
+const GridList = GridComponent.GridList;
+const GridTile = GridComponent.GridTile;
 
-const Checkbox = require('material-ui/Checkbox').default
 const LinearProgress = require('material-ui/LinearProgress').default
+const Navbar = require('../components/navbar')
 
-const TorrentSummary = require('../lib/torrent-summary');
-const TorrentPlayer = require('../lib/torrent-player');
 const {dispatch, dispatcher} = require('../lib/dispatcher');
-// const {torrentParser} = require('../controllers/torrent-list-controller')
 const request = require('request'),
     cheerio = require("cheerio")
 module.exports = class TorrentList extends React.Component {
@@ -36,12 +36,17 @@ module.exports = class TorrentList extends React.Component {
         );
         contents.push(
             <div>
-                {
-                    (this.props.state.torrentList) ?
-                        <div className="col-md-12">{this.renderTorrentList()} </div>
-                        :
-                        <span>loading</span>
-                }
+                <div className="col-md-2">
+                    <Navbar/>
+                </div>
+                <div className="col-md-10">
+                    {
+                        (this.props.state.torrentList) ?
+                            <div className="col-md-12">{this.renderTorrentList()} </div>
+                            :
+                            <LinearProgress/>
+                    }
+                </div>
             </div>
         )
         contents.push(<div className="col-md-12 bottom">
@@ -58,11 +63,11 @@ module.exports = class TorrentList extends React.Component {
 
     handleScroll() {
 
-        let {torrentListRequest} = this.props.state;
+        let torrentListRequest = this.props.state.torrentListRequest;
         if (torrentListRequest == 'success' && document.querySelector('.bottom'))
             if (document.querySelector('body').offsetHeight - screen.height - 60 < window.scrollY) {
                 this.state.page++;
-                console.log('page',this.state.page)
+                console.log('page', this.state.page)
                 this.props.state.torrentListRequest = 'request';
                 this.torrentParser(this.state.page)
             }
@@ -74,14 +79,30 @@ module.exports = class TorrentList extends React.Component {
 
     renderTorrentList() {
         const {torrentList} = this.props.state
-        return torrentList.map(function (item) {
-            if (item != null)
-                return <div key={item.magnet} onClick={dispatcher('torrentDetail', item)} className="movie">
+        let styles = {
+            gridTile: {
+                marginTop: '20px'
+            }
+        };
+        return (<GridList
+            cellHeight={190}
+            cols={5}>
+            {torrentList.map(function (item) {
+                return <GridTile
+                    onClick={dispatcher('torrentDetail', item)}
+                    key={Math.random() * 100}
+                    title={item.name}
+                    subtitle={item.name}
+                    style={styles.gridTile}
+                >
                     <img src={item.img}/>
-                    <div className="title">{item.name}</div>
-                </div>
-        })
+                </GridTile>
+            })
+            }
+
+        </GridList>)
     }
+
 
     goToDetailPage() {
         this.state.location.go({url: 'torrent-detail-page'})
