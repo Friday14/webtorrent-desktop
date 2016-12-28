@@ -1,4 +1,4 @@
-const React = require('React')
+const React = require('react')
 // import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
 const TableComponent = require('material-ui/Table');
 const Table = TableComponent.Table;

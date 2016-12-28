@@ -1,9 +1,7 @@
 const React = require('react')
 // import {GridList, GridTile} from '';
-const GridComponent = require('material-ui/GridList');
-const GridList = GridComponent.GridList;
-const GridTile = GridComponent.GridTile;
 
+const {GridList, GridTile} = require('material-ui/GridList');
 const LinearProgress = require('material-ui/LinearProgress').default
 const Navbar = require('../components/navbar')
 
@@ -11,15 +9,28 @@ const {dispatch, dispatcher} = require('../lib/dispatcher');
 const request = require('request'),
     cheerio = require("cheerio")
 module.exports = class TorrentList extends React.Component {
+    constructor(props) {
+        super(props)
+        this.state ={
+            page: 0,
+            torrentList: []
+        }
+    }
+
     componentDidMount() {
         this.torrentParser();
-        this.state = {page: 0}
+    }
+
+    shouldComponentUpdate(newProps, newState) {
+        console.log(this.state.torrentList !== newState.torrentList)
+        return this.state.torrentList !== newState.torrentList;
     }
 
     componentWillMount() {
         document.body.style.height = 'auto';
         // document.body.style.backgroundColor = 'red';
         window.onscroll = () => {
+            console.log('scrol')
             this.handleScroll()
         }
     }
@@ -41,7 +52,7 @@ module.exports = class TorrentList extends React.Component {
                 </div>
                 <div className="col-md-10">
                     {
-                        (this.props.state.torrentList) ?
+                        (this.state.torrentList) ?
                             <div className="col-md-12">{this.renderTorrentList()} </div>
                             :
                             <LinearProgress/>
@@ -55,7 +66,7 @@ module.exports = class TorrentList extends React.Component {
         return (
             <div key='torrent-list' className='torrent-list'>
                 {contents}
-                {this.props.state.torrentListRequest == 'request' ?
+                {this.state.torrentListRequest == 'request' ?
                     <div style={{width: '100%', marginBottom: '200px'}}></div> : null}
             </div>
         )
@@ -63,14 +74,14 @@ module.exports = class TorrentList extends React.Component {
 
     handleScroll() {
 
-        let torrentListRequest = this.props.state.torrentListRequest;
-        if (torrentListRequest == 'success' && document.querySelector('.bottom'))
+        let torrentListRequest = this.state.torrentListRequest;
+            console.log(torrentListRequest)
+        if(torrentListRequest == 'success')
             if (document.querySelector('body').offsetHeight - screen.height - 60 < window.scrollY) {
                 this.state.page++;
-                console.log('page', this.state.page)
-                this.props.state.torrentListRequest = 'request';
                 this.torrentParser(this.state.page)
             }
+
     }
 
     hanlderClickToListDownload() {
@@ -78,7 +89,7 @@ module.exports = class TorrentList extends React.Component {
     }
 
     renderTorrentList() {
-        const {torrentList} = this.props.state
+        const {torrentList} = this.state
         let styles = {
             gridTile: {
                 marginTop: '20px'
@@ -109,7 +120,8 @@ module.exports = class TorrentList extends React.Component {
     }
 
     torrentParser(page = null) {
-        this.props.state.torrentListRequest = 'request';
+        console.log('TORRENT PARSER')
+        this.state.torrentListRequest = 'request';
         console.log('load page %s', page)
         let arrayMovies = [];
 
@@ -119,7 +131,7 @@ module.exports = class TorrentList extends React.Component {
         }
         let params = (page) ? '?page=' + page : '';
         let url = options.host + options.path + params
-        request(url, function (error, response, body) {
+        request(url, (error, response, body) => {
             let $ = cheerio.load(body);
             $(".m-right .plate.showcase .tiles").find('.tile').map((key, item) => {
                 let elem = $(item)
@@ -130,7 +142,10 @@ module.exports = class TorrentList extends React.Component {
                         link: elem.find('a').attr('href'),
                     }
             })
-            dispatch('addTorrentList', arrayMovies);
+            this.setState({torrentList : [...this.state.torrentList, ...arrayMovies]});
+            setTimeout(() => {this.state.torrentListRequest = 'success'}, 100);
+            console.log(this.state)
+            // dispatch('addTorrentList', arrayMovies);
         });
     }
 }

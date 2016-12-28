@@ -1,6 +1,6 @@
 
 
-const React = require('React')
+const React = require('react')
 const List = require('material-ui/List').List
 const ListItem = require('material-ui/List').ListItem
 const ActionInfo = require('material-ui/svg-icons/action/info').default
