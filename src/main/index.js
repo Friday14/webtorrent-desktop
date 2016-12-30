@@ -85,6 +85,7 @@ function init () {
       console.error(err)
       const error = {message: err.message, stack: err.stack}
       windows.main.dispatch('uncaughtError', 'main', error)
+
     })
   }
 

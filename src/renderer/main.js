@@ -203,6 +203,7 @@ function update() {
     updateElectron()
 }
 
+
 // Some state changes can't be reflected in the DOM, instead we have to
 // tell the main process to update the window or OS integrations
 function updateElectron() {
@@ -302,8 +303,10 @@ const dispatchHandlers = {
     'back': () => state.location.back(),
     'forward': () => state.location.forward(),
     'cancel': () => state.location.cancel(),
+    'goDownloadPage': () => state.location.go({url: 'torrent-download-list'}),
 
-    // Controlling the window
+
+// Controlling the window
     'setDimensions': setDimensions,
     'toggleFullScreen': (setTo) => ipcRenderer.send('toggleFullScreen', setTo),
     'setTitle': (title) => {
@@ -322,15 +325,7 @@ const dispatchHandlers = {
     'update': () => {
     }, // No-op, just trigger an update
 
-    'addTorrentList': (data) => {
-        if (state.torrentList) {
-            state.torrentList = [...state.torrentList, ...data];
-        }
-        else {
-            state.torrentList = data;
-        }
-        state.torrentListRequest = 'success';
-    },
+
     'torrentDetail': (torrent) => {
         state.torrentDetail = torrent;
         state.location.go({url: 'torrent-detail-page'})

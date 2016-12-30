@@ -6,14 +6,17 @@ const LinearProgress = require('material-ui/LinearProgress').default
 const Navbar = require('../components/navbar')
 
 const {dispatch, dispatcher} = require('../lib/dispatcher');
+
+
 const request = require('request'),
     cheerio = require("cheerio")
+
 module.exports = class TorrentList extends React.Component {
     constructor(props) {
-        super(props)
-        this.state ={
+        super(props);
+        this.state = {
             page: 0,
-            torrentList: []
+            torrentList: [],
         }
     }
 
@@ -22,7 +25,6 @@ module.exports = class TorrentList extends React.Component {
     }
 
     shouldComponentUpdate(newProps, newState) {
-        console.log(this.state.torrentList !== newState.torrentList)
         return this.state.torrentList !== newState.torrentList;
     }
 
@@ -41,18 +43,16 @@ module.exports = class TorrentList extends React.Component {
     }
 
     render() {
+
         const contents = [];
         contents.push(
-            <span onClick={this.hanlderClickToListDownload}>Список загрузок</span>
-        );
-        contents.push(
-            <div>
-                <div className="col-md-2">
+            <div key="push">
+                <div key="menu" className="col-md-2">
                     <Navbar/>
                 </div>
-                <div className="col-md-10">
+                <div key="cont" className="col-md-10">
                     {
-                        (this.state.torrentList) ?
+                        (this.state.torrentList.length !== 0) ?
                             <div className="col-md-12">{this.renderTorrentList()} </div>
                             :
                             <LinearProgress/>
@@ -60,14 +60,10 @@ module.exports = class TorrentList extends React.Component {
                 </div>
             </div>
         )
-        contents.push(<div className="col-md-12 bottom">
-            <span className="text">...</span>
-        </div>)
         return (
-            <div key='torrent-list' className='torrent-list'>
+            <div key="main" className='torrent-list'>
                 {contents}
-                {this.state.torrentListRequest == 'request' ?
-                    <div style={{width: '100%', marginBottom: '200px'}}></div> : null}
+
             </div>
         )
     }
@@ -75,8 +71,7 @@ module.exports = class TorrentList extends React.Component {
     handleScroll() {
 
         let torrentListRequest = this.state.torrentListRequest;
-            console.log(torrentListRequest)
-        if(torrentListRequest == 'success')
+        if (torrentListRequest == 'success')
             if (document.querySelector('body').offsetHeight - screen.height - 60 < window.scrollY) {
                 this.state.page++;
                 this.torrentParser(this.state.page)
@@ -88,24 +83,31 @@ module.exports = class TorrentList extends React.Component {
         this.state.location.go({url: 'torrent-download-list'})
     }
 
+    cellRenderer () {
+        let box = [];
+         this.state.torrentList.map(function (item) {
+            box[box.length] = <GridTile
+                onClick={dispatcher('torrentDetail', item)}
+                title={item.name}
+                subtitle={item.name}>
+                <img src={item.img}/>
+            </GridTile>
+        });
+         return box;
+    }
+
     renderTorrentList() {
         const {torrentList} = this.state
-        let styles = {
-            gridTile: {
-                marginTop: '20px'
-            }
-        };
         return (<GridList
             cellHeight={190}
-            cols={5}>
+            cols={4}>
             {torrentList.map(function (item) {
+
                 return <GridTile
                     onClick={dispatcher('torrentDetail', item)}
                     key={Math.random() * 100}
                     title={item.name}
-                    subtitle={item.name}
-                    style={styles.gridTile}
-                >
+                    subtitle={item.name}>
                     <img src={item.img}/>
                 </GridTile>
             })
@@ -134,18 +136,21 @@ module.exports = class TorrentList extends React.Component {
         request(url, (error, response, body) => {
             let $ = cheerio.load(body);
             $(".m-right .plate.showcase .tiles").find('.tile').map((key, item) => {
-                let elem = $(item)
+                let elem = $(item);
                 if (elem.find('.name').text())
+                {
                     arrayMovies[arrayMovies.length] = {
                         name: elem.find('.name').text(),
                         img: elem.find('img').attr('src'),
                         link: elem.find('a').attr('href'),
-                    }
-            })
-            this.setState({torrentList : [...this.state.torrentList, ...arrayMovies]});
-            setTimeout(() => {this.state.torrentListRequest = 'success'}, 100);
-            console.log(this.state)
-            // dispatch('addTorrentList', arrayMovies);
+                    };}
+            });
+            console.log(arrayMovies)
+            this.setState({torrentList: [...this.state.torrentList, ...arrayMovies]});
+
+            setTimeout(() => {
+                this.state.torrentListRequest = 'success'
+            }, 300);
         });
     }
 }
