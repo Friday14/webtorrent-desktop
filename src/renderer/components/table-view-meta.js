@@ -40,19 +40,22 @@ class TableEx extends React.Component {
                 </TableRow>
             </TableHeader>
             <TableBody displayRowCheckbox={false}>
-                {data.map(function (row) {
-                    return <TableRow style={{fontSize:'17px'}} key={row.seed + row.size}>
-                        <TableRowColumn style={styles.column} key="1ta">{row.seed} / {row.leech}</TableRowColumn>
-                        <TableRowColumn style={styles.column} key="1tb">{row.size}</TableRowColumn>
-                        <TableRowColumn style={styles.column} key="1tc">{row.video}</TableRowColumn>
-                        <TableRowColumn style={styles.column} key="1tf">{row.audio}</TableRowColumn>
-                        <TableRowColumn style={styles.column} key="1th">{row.languages}</TableRowColumn>
-                         <TableRowColumn style={styles.column} key="15t">
-                            {row.files.map((file) => <span key={file.size} className="label label-default">{file.file}</span>)}
+                {data.map(function (row, key) {
+                    return <TableRow style={{fontSize:'17px'}} key={'table-row-' + key}>
+                        <TableRowColumn style={styles.column} key={'seed-' + key}>
+                        {row.seed} / {row.leech}</TableRowColumn>
+                        <TableRowColumn style={styles.column}  key={'size-' + key}>{row.size}</TableRowColumn>
+                        <TableRowColumn style={styles.column}  key={'video-' + key}>{row.video}</TableRowColumn>
+                        <TableRowColumn style={styles.column}  key={'audio-' + key}>{row.audio}</TableRowColumn>
+                        <TableRowColumn style={styles.column}  key={'lang-' + key}>{row.languages}</TableRowColumn>
+                         <TableRowColumn style={styles.column}  key={'files-' + key}>
+                            {row.files.map((file,fkey) => 
+                                <span key={'file' + key + '-' + fkey} className="label label-default">{file.file}</span>)}
                         </TableRowColumn>
-                        <TableRowColumn style={styles.column} key="1tsdh">
-                            <label className="label label-success" onClick={dispatcher('addTorrent',row.magnet)}>
-                                Скачать
+                        <TableRowColumn style={styles.column} key={'magnet-' + key}>
+                            <label className="label label-success" 
+                            onClick={dispatcher('addTorrent',row.magnet)}>
+                                Скачать{row.magnet}
                             </label>
                         </TableRowColumn>
                     </TableRow>

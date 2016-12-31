@@ -335,6 +335,12 @@ const dispatchHandlers = {
     },
     'torrentFetchMetaDataSuccess': (metaInfo) => {
         state.torrentDetail.meta = metaInfo;
+    },
+    'torrentFetchSearch': (nameTorrent) => {
+        controllers.torrentFetch().fetchFindTorrent(nameTorrent);
+    },
+    'setResultSearch': (resultSearch) => {
+        state.resultSearch = resultSearch;
     }
 }
 

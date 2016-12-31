@@ -10,7 +10,6 @@ const {dispatch, dispatcher} = require('../lib/dispatcher');
 // const Grid = require('../components/grid/item');
 const request = require('request'),
     cheerio = require("cheerio")
-
 module.exports = class TorrentList extends React.Component {
     constructor(props) {
         super(props);
@@ -88,7 +87,7 @@ module.exports = class TorrentList extends React.Component {
         const {torrentList} = this.state
         return (<GridList
             cellHeight={190}
-            cols={4}>
+            cols={5}>
             {torrentList.map(function (item, key) {
                 return <GridTile
                     onClick={dispatcher('torrentDetail', item)}
@@ -103,10 +102,6 @@ module.exports = class TorrentList extends React.Component {
         </GridList>)
     }
 
-
-    goToDetailPage() {
-        this.state.location.go({url: 'torrent-detail-page'})
-    }
 
     torrentParser(page = null) {
         console.log('TORRENT PARSER')
@@ -132,7 +127,6 @@ module.exports = class TorrentList extends React.Component {
                         link: elem.find('a').attr('href'),
                     };}
             });
-            console.log(arrayMovies)
             this.setState({torrentList: [...this.state.torrentList, ...arrayMovies]});
 
             setTimeout(() => {

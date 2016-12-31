@@ -11,8 +11,9 @@ const ipcRenderer = electron.ipcRenderer
 
 // Controls the torrent list: creating, adding, deleting, & manipulating torrents
 module.exports = class TorrentFetchController {
-    constructor(state) {
-        this.state = state
+    constructor() {
+        //this.state = state
+        this.url = 'http://www.torrentino.me';
     }
 
     getMetaData(torrentLink) {
@@ -21,13 +22,13 @@ module.exports = class TorrentFetchController {
             path: torrentLink
         };
         let meta = [];
-        let magnet;
         let url = options.host + options.path;
         //'audio', 'video', 'languages', 'size' magnet
         request(url, function (error, response, body) {
             let $ = cheerio.load(body);
             $(".plate.list-start").find('tr').map((key, item) => {
                 let elem = $(item);
+                let magnet;
                 if (magnet = elem.find('.download a').attr('data-default')) {
 
                     let urlGetFilesList = elem.find('td.consistence a').attr('data-route');
@@ -50,10 +51,34 @@ module.exports = class TorrentFetchController {
                 }
 
             });
-            console.log(meta);
+            
             dispatch('torrentFetchMetaDataSuccess', meta);
             // dispatch('addTorrentList', arrayMovies);
         });
     }
+
+    fetchFindTorrent(findValue, callback){
+        let url = this.url;
+        url = url + '/search?search=' + encodeURI(findValue); 
+        console.log('url find', url)
+        let arrayMovies = [];
+        request(url, function (error, response, body) {
+            let $ = cheerio.load(body);
+          
+            $('.tab.tab0.open .search-block').find('.tile').map((key, item) => {
+                let elem = $(item);
+                if (elem.find('.name').text())
+                {
+                    arrayMovies[arrayMovies.length] = {
+                        name: elem.find('.name').text(),
+                        img: elem.find('img').attr('src'),
+                        link: elem.find('a').attr('href'),
+                    };
+                }
+            });
+            // dispatch('setResultSearch', arrayMovies)
+            return callback(arrayMovies);
+        })
+    }
 }
-//                dispatch('torrentFetchMetaDataSuccess', meta);
+
