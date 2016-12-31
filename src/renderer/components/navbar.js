@@ -30,6 +30,10 @@ module.exports = class NavBar extends React.Component {
                 primaryText="..."
                 secondaryText="Jan 28, 2014"
             />
+            <div>
+             <input className='find' type='text' placeholder='Поиск'/>
+             <button className='find btn btn-default'>Найти</button> 
+            </div> 
         </List>
     </div>
 }

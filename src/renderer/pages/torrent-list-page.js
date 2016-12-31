@@ -7,21 +7,13 @@ const Navbar = require('../components/navbar')
 
 const {dispatch, dispatcher} = require('../lib/dispatcher');
 
-
+// const Grid = require('../components/grid/item');
 const request = require('request'),
     cheerio = require("cheerio")
 
 module.exports = class TorrentList extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            page: 0,
-            torrentList: [],
-        }
-    }
-
-    componentDidMount() {
-        this.torrentParser();
     }
 
     shouldComponentUpdate(newProps, newState) {
@@ -29,12 +21,18 @@ module.exports = class TorrentList extends React.Component {
     }
 
     componentWillMount() {
+        this.setState({
+            page: 0,
+            torrentList: [],
+        });
         document.body.style.height = 'auto';
-        // document.body.style.backgroundColor = 'red';
         window.onscroll = () => {
-            console.log('scrol')
             this.handleScroll()
         }
+    }
+
+    componentDidMount() {
+        this.torrentParser();
     }
 
     componentWillUnmount() {
@@ -50,10 +48,12 @@ module.exports = class TorrentList extends React.Component {
                 <div key="menu" className="col-md-2">
                     <Navbar/>
                 </div>
-                <div key="cont" className="col-md-10">
+                <div key="cont" className="col-md-10" style={{overflow: 'hidden'}}>
                     {
                         (this.state.torrentList.length !== 0) ?
-                            <div className="col-md-12">{this.renderTorrentList()} </div>
+                            <div className="col-md-12">
+                                {this.renderTorrentList()} 
+                            </div>
                             :
                             <LinearProgress/>
                     }
@@ -83,29 +83,16 @@ module.exports = class TorrentList extends React.Component {
         this.state.location.go({url: 'torrent-download-list'})
     }
 
-    cellRenderer () {
-        let box = [];
-         this.state.torrentList.map(function (item) {
-            box[box.length] = <GridTile
-                onClick={dispatcher('torrentDetail', item)}
-                title={item.name}
-                subtitle={item.name}>
-                <img src={item.img}/>
-            </GridTile>
-        });
-         return box;
-    }
 
     renderTorrentList() {
         const {torrentList} = this.state
         return (<GridList
             cellHeight={190}
             cols={4}>
-            {torrentList.map(function (item) {
-
+            {torrentList.map(function (item, key) {
                 return <GridTile
                     onClick={dispatcher('torrentDetail', item)}
-                    key={Math.random() * 100}
+                    key={'keyTorrent-' + key}
                     title={item.name}
                     subtitle={item.name}>
                     <img src={item.img}/>

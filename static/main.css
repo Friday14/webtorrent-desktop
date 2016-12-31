@@ -977,3 +977,7 @@ video::-webkit-media-text-track-container {
     position: absolute;
     bottom: 0;
 }
+
+.find{
+    color:black;
+}
