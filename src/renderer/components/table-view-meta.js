@@ -55,7 +55,7 @@ class TableEx extends React.Component {
                         <TableRowColumn style={styles.column} key={'magnet-' + key}>
                             <label className="label label-success" 
                             onClick={dispatcher('addTorrent',row.magnet)}>
-                                Скачать{row.magnet}
+                                Скачать
                             </label>
                         </TableRowColumn>
                     </TableRow>

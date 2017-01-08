@@ -22,17 +22,25 @@ module.exports = class TorrentFetchController {
             path: torrentLink
         };
         let meta = [];
+        let descr = '';
         let url = options.host + options.path;
         //'audio', 'video', 'languages', 'size' magnet
         request(url, function (error, response, body) {
             let $ = cheerio.load(body);
+
+           
             $(".plate.list-start").find('tr').map((key, item) => {
                 let elem = $(item);
                 let magnet;
                 if (magnet = elem.find('.download a').attr('data-default')) {
+                    
+                    let content = $('.plate.head-plate .specialty')
+                    let content_delete = $(content).find('.section.numbers').text() 
+                    let descr = content.text().substring(content_delete.length)
 
                     let urlGetFilesList = elem.find('td.consistence a').attr('data-route');
                     let files = [];
+
                     request(urlGetFilesList, function (err, res, body) {
                         files = JSON.parse(body)
 
@@ -45,17 +53,20 @@ module.exports = class TorrentFetchController {
                             seed: elem.find('td.seed-leech .seed').text(),
                             leech: elem.find('td.seed-leech .leech').text(),
                             magnet: magnet,
+                            descr: descr,
                             files: files.files
                         };
                     });
                 }
 
+
             });
-            
+
             dispatch('torrentFetchMetaDataSuccess', meta);
             // dispatch('addTorrentList', arrayMovies);
         });
     }
+
 
     fetchFindTorrent(findValue, callback){
         let url = this.url;

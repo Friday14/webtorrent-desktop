@@ -24,6 +24,11 @@ module.exports = class TorrentDetailPage extends React.Component {
                 <div className="col-md-3"><img src={this.props.state.torrentDetail.img} alt=""/></div>
                 <div className="col-md-9">
                     <h1>{this.props.state.torrentDetail.name}</h1>
+                    <div>
+                        {this.props.state.torrentDetail.meta ? 
+                            this.props.state.torrentDetail.meta[0].descr :
+                            null}
+                    </div>
             </div>
         </div>
             <div className="col-md-10 col-lg-offset-2">
@@ -35,34 +40,7 @@ module.exports = class TorrentDetailPage extends React.Component {
     renderTableInfo() {
         if (!this.props.state.torrentDetail.meta)
             return <CircularProgress/>
-             return   <TableEx data={this.props.state.torrentDetail.meta}/>
+        return   <TableEx data={this.props.state.torrentDetail.meta}/>
 
-        let table = [];
-      return (
-            <table className="table table-responsive">
-                <thead>
-                <tr>
-                    <th>Сиды/Пиры</th>
-                    <th>Файлы</th>
-                    <th>Размер</th>
-                    <th>Звук</th>
-                </tr>
-                </thead>
-                <tbody>
-
-                {this.props.state.torrentDetail.meta.map(function (column, key) {
-                    if (column.magnet != null) {
-                        return (
-                            <tr key={key} onClick={dispatcher('addTorrent', column.magnet)}>
-                                <th scope="row">1</th>
-                                <td>Mark</td>
-                                <td>{column.size}</td>
-                                <td>{column.languages}</td>
-                            </tr>
-                        )
-                    }
-                })}
-                </tbody>
-            </table>);
     }
 }
