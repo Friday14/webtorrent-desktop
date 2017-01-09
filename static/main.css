@@ -22,7 +22,6 @@ td, th {
 html,
 body {
     background: rgb(40, 40, 40);
-    background-image: url('oboitut.com_8600.jpg');
     cursor: default;
     height: 100%;
     margin: 0;
@@ -230,6 +229,10 @@ body {
     overflow-y: overlay;
     flex: 1 1 auto;
     margin-top: 38px;
+
+    background-image: url(dark_background.jpg);
+    background-attachment: fixed;
+    background-size: 100%;
 }
 
 .app.view-player .content {
@@ -980,4 +983,40 @@ video::-webkit-media-text-track-container {
 
 .find{
     color:black;
+}
+
+
+
+.media-grid-item{
+    height: 300px;
+    margin-left:15px;
+    margin-right:15px;
+}
+
+.media-grid-item .item-img{
+    height: 70%;
+    box-shadow: 0px 6px 41px 7px;
+    color: rgba(0, 0, 0, 0.82);
+}
+.item-img img{
+    height: 223px;
+    width: 160px;
+}
+
+.media-grid-item .raiting, .year{
+    float: right;
+    position: absolute;
+    right: -4px;
+    top: 6px;
+}
+.media-grid-item .label-good-raiting {
+    background-color: rgba(244, 67, 54, 0.62);
+}
+.media-grid-item .label-bad-raiting {
+    background-color: rgba(244, 67, 54, 1.62);
+}
+
+.media-grid-item .year{
+    top: 201px;
+    left: 13px;
 }

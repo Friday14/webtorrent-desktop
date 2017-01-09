@@ -4,7 +4,7 @@ const React = require('react')
 const {GridList, GridTile} = require('material-ui/GridList');
 const LinearProgress = require('material-ui/LinearProgress').default
 const Navbar = require('../components/navbar')
-
+const MediaGrid = require('../components/media/Grid')
 const {dispatch, dispatcher} = require('../lib/dispatcher');
 
 // const Grid = require('../components/grid/item');
@@ -47,6 +47,7 @@ module.exports = class TorrentList extends React.Component {
                 <div key="menu" className="col-md-2">
                     <Navbar/>
                 </div>
+                
                 <div key="cont" className="col-md-10" style={{overflow: 'hidden'}}>
                     {
                         (this.state.torrentList.length !== 0) ?
@@ -85,14 +86,19 @@ module.exports = class TorrentList extends React.Component {
 
     renderTorrentList() {
         const {torrentList} = this.state
+        
+        return <MediaGrid items={torrentList}/>
+        
         return (<GridList
             cellHeight={190}
             cols={5}>
-            {torrentList.map(function (item, key) {
+
+         {torrentList.map(function (item, key) {
+                
                 return <GridTile
                     onClick={dispatcher('torrentDetail', item)}
                     key={'keyTorrent-' + key}
-                    title={item.name}
+                    title={ item.name + ' rait:' + item.raiting}
                     subtitle={item.name}>
                     <img src={item.img}/>
                 </GridTile>
@@ -125,6 +131,8 @@ module.exports = class TorrentList extends React.Component {
                         name: elem.find('.name').text(),
                         img: elem.find('img').attr('src'),
                         link: elem.find('a').attr('href'),
+                        raiting: elem.find('span.rating').text(),
+                        year: elem.find('span.year').text()
                     };}
             });
             this.setState({torrentList: [...this.state.torrentList, ...arrayMovies]});
