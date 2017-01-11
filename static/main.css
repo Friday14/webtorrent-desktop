@@ -19,6 +19,19 @@ td, th {
     text-align: center;
 }
 
+.table[class*=bg-] > thead > tr > th {
+    border-color: rgba(255, 255, 255, .02);
+}
+
+tr:nth-child(odd) {
+    background: rgba(58, 57, 57, 0.72);
+}
+
+.meta-table{
+    box-shadow: 0 0 14px 4px;
+    color: rgb(26, 27, 31);
+}
+
 html,
 body {
     background: rgb(40, 40, 40);
@@ -981,42 +994,43 @@ video::-webkit-media-text-track-container {
     bottom: 0;
 }
 
-.find{
-    color:black;
+.find {
+    color: black;
 }
 
-
-
-.media-grid-item{
+.media-grid-item {
     height: 300px;
-    margin-left:15px;
-    margin-right:15px;
+    margin-left: 15px;
+    margin-right: 15px;
 }
 
-.media-grid-item .item-img{
+.media-grid-item .item-img {
     height: 70%;
     box-shadow: 0px 6px 41px 7px;
     color: rgba(0, 0, 0, 0.82);
 }
-.item-img img{
+
+.item-img img {
     height: 223px;
     width: 160px;
 }
 
-.media-grid-item .raiting, .year{
+.media-grid-item .raiting, .year {
     float: right;
     position: absolute;
     right: -4px;
     top: 6px;
 }
+
 .media-grid-item .label-good-raiting {
     background-color: rgba(244, 67, 54, 0.62);
 }
+
 .media-grid-item .label-bad-raiting {
     background-color: rgba(244, 67, 54, 1.62);
 }
 
-.media-grid-item .year{
+.media-grid-item .year {
     top: 201px;
     left: 13px;
 }

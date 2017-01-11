@@ -23,45 +23,49 @@ class TableEx extends React.Component {
             header: {
                 textAlign: 'center',
             }
-        }
+        };
+
         const {data} = this.props;
-        return <Table>
-            <TableHeader displaySelectAll={false}
-                         adjustForCheckbox={false}
-            >
-                <TableRow>
-                    <TableHeaderColumn style={styles.header}>Seed/Peer</TableHeaderColumn>
-                    <TableHeaderColumn style={styles.header}>Размер</TableHeaderColumn>
-                    <TableHeaderColumn style={styles.header}>Размер видео</TableHeaderColumn>
-                    <TableHeaderColumn style={styles.header}>Аудио</TableHeaderColumn>
-                    <TableHeaderColumn style={styles.header}>Локализация</TableHeaderColumn>
-                    <TableHeaderColumn style={styles.header}>Файлы</TableHeaderColumn>
-                    <TableHeaderColumn style={styles.header}>Скачать</TableHeaderColumn>
-                </TableRow>
-            </TableHeader>
-            <TableBody displayRowCheckbox={false}>
-                {data.map(function (row, key) {
-                    return <TableRow style={{fontSize:'17px'}} key={'table-row-' + key}>
-                        <TableRowColumn style={styles.column} key={'seed-' + key}>
-                        {row.seed} / {row.leech}</TableRowColumn>
-                        <TableRowColumn style={styles.column}  key={'size-' + key}>{row.size}</TableRowColumn>
-                        <TableRowColumn style={styles.column}  key={'video-' + key}>{row.video}</TableRowColumn>
-                        <TableRowColumn style={styles.column}  key={'audio-' + key}>{row.audio}</TableRowColumn>
-                        <TableRowColumn style={styles.column}  key={'lang-' + key}>{row.languages}</TableRowColumn>
-                         <TableRowColumn style={styles.column}  key={'files-' + key}>
-                            {row.files.map((file,fkey) => 
-                                <span key={'file' + key + '-' + fkey} className="label label-default">{file.file}</span>)}
-                        </TableRowColumn>
-                        <TableRowColumn style={styles.column} key={'magnet-' + key}>
-                            <label className="label label-success" 
-                            onClick={dispatcher('addTorrent',row.magnet)}>
-                                Скачать
-                            </label>
-                        </TableRowColumn>
-                    </TableRow>
-                })}
-            </TableBody>
-        </Table>
+        return <div>
+            <h1>Источники</h1>
+            <div className=" meta-table table-responsive" style={{background: 'rgba(0, 151, 167, 0.46)'}}>
+                <table className="table bg-info-700">
+                    <thead>
+                    <tr>
+                        <th>Seed/Peer</th>
+                        <th>Размер</th>
+                        <th>Размер видео</th>
+                        <th>Аудио</th>
+                        <th>Локализация</th>
+                        {/*<th>Файлы</th>*/}
+                        <th>Скачать</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {data.map((row, key) => this.renderItem(row, key))}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    }
+
+    renderItem(row, key) {
+        return <tr>
+            <td>{row.seed} / {row.leech}</td>
+            <td>{row.size}</td>
+            <td>{row.video}</td>
+            <td>{row.audio}</td>
+            <td>{row.languages}</td>
+            {/*
+             <td>{row.files.map((file, fkey) =>
+             <span key={'file' + key + '-' + fkey}
+             className="label label-default">{file.file}</span>)}</td>*/}
+            <td><label className="label label-success"
+                       onClick={dispatcher('addTorrent', row.magnet)}>
+                Скачать
+            </label></td>
+        </tr>
     }
 }
 

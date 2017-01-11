@@ -25,15 +25,22 @@ module.exports = class TorrentDetailPage extends React.Component {
                 <div className="col-md-9">
                     <h1>{this.props.state.torrentDetail.name}</h1>
                     <div>
-                        {this.props.state.torrentDetail.meta ? 
+                        {this.props.state.torrentDetail.meta && this.props.state.torrentDetail.meta[0]?
                             this.props.state.torrentDetail.meta[0].descr :
                             null}
                     </div>
+                    <div>
+                        {this.props.state.torrentDetail.meta && this.props.state.torrentDetail.meta[0].trailer?
+                            <video width="500px" src={this.props.state.torrentDetail.meta[0].trailer} controls></video>:
+                            null}
+                    </div>
+
             </div>
+                <div className="col-md-10">
+                    {this.renderTableInfo()}
+                </div>
         </div>
-            <div className="col-md-10 col-lg-offset-2">
-                {this.renderTableInfo()}
-            </div>
+
         </div>
     }
 
@@ -43,4 +50,5 @@ module.exports = class TorrentDetailPage extends React.Component {
         return   <TableEx data={this.props.state.torrentDetail.meta}/>
 
     }
+
 }

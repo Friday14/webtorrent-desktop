@@ -23,12 +23,15 @@ module.exports = class TorrentFetchController {
         };
         let meta = [];
         let descr = '';
+        let trailer = '';
         let url = options.host + options.path;
-        //'audio', 'video', 'languages', 'size' magnet
+
         request(url, function (error, response, body) {
             let $ = cheerio.load(body);
-
-           
+            let start = body.substring(body.indexOf('var fotoOptions ='));
+            let fotoAndVideoScript = start.substring(0,start.indexOf('</script>'));
+            eval(fotoAndVideoScript)
+            console.log(fotoOptions)
             $(".plate.list-start").find('tr').map((key, item) => {
                 let elem = $(item);
                 let magnet;
@@ -54,6 +57,7 @@ module.exports = class TorrentFetchController {
                             leech: elem.find('td.seed-leech .leech').text(),
                             magnet: magnet,
                             descr: descr,
+                            trailer: fotoOptions.data[0].video,
                             files: files.files
                         };
                     });
