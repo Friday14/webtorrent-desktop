@@ -7,6 +7,7 @@ const LinearProgress = require('material-ui/LinearProgress').default
 const TorrentSummary = require('../lib/torrent-summary')
 const TorrentPlayer = require('../lib/torrent-player')
 const {dispatcher} = require('../lib/dispatcher')
+const Navbar = require('../components/navbar')
 
 module.exports = class TorrentDownloadList extends React.Component {
   render () {
@@ -34,15 +35,13 @@ module.exports = class TorrentDownloadList extends React.Component {
       </div>
     )
 
-      contents.push(
-          <div>
-            <span onClick={this.parser}>Parser</span>
-          </div>
-      )
 
-    return (
+    return ( 
       <div key='torrent-list' className='torrent-list'>
-        {contents}
+        <div key="menu" className="col-md-2" >
+          <Navbar/>
+         </div>
+        <div className="col-md-10">{contents}</div>
       </div>
     )
   }

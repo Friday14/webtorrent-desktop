@@ -10,6 +10,7 @@ const {dispatch, dispatcher} = require('../lib/dispatcher');
 // const Grid = require('../components/grid/item');
 const request = require('request'),
     cheerio = require("cheerio")
+
 module.exports = class TorrentList extends React.Component {
     constructor(props) {
         super(props);
@@ -44,7 +45,7 @@ module.exports = class TorrentList extends React.Component {
         const contents = [];
         contents.push(
             <div key="push">
-                <div key="menu" className="col-md-2">
+                <div key="menu" className="col-md-2" >
                     <Navbar/>
                 </div>
                 
@@ -110,7 +111,6 @@ module.exports = class TorrentList extends React.Component {
 
 
     torrentParser(page = null) {
-        console.log('TORRENT PARSER')
         this.state.torrentListRequest = 'request';
         console.log('load page %s', page)
         let arrayMovies = [];
@@ -131,6 +131,7 @@ module.exports = class TorrentList extends React.Component {
                         name: elem.find('.name').text(),
                         img: elem.find('img').attr('src'),
                         link: elem.find('a').attr('href'),
+                        quality: elem.find('.quality').text(),
                         raiting: elem.find('span.rating').text(),
                         year: elem.find('span.year').text()
                     };}

@@ -48,6 +48,10 @@ module.exports = class MediaGrid extends React.Component {
                         {item.year} г.
                       </span>
                     </div>
+
+                      <span className="label quality">
+                        {item.quality}
+                      </span>
                   </div>
                 </div>
                 <div className="caption" style={{textAlign: 'center'}}>

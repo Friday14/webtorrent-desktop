@@ -32,6 +32,7 @@ class TableEx extends React.Component {
                 <table className="table bg-info-700">
                     <thead>
                     <tr>
+                        <th>Качество</th>
                         <th>Seed/Peer</th>
                         <th>Размер</th>
                         <th>Размер видео</th>
@@ -52,6 +53,7 @@ class TableEx extends React.Component {
 
     renderItem(row, key) {
         return <tr>
+            <td>{row.quality}</td>
             <td>{row.seed} / {row.leech}</td>
             <td>{row.size}</td>
             <td>{row.video}</td>

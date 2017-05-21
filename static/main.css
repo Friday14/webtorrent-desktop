@@ -1030,7 +1030,63 @@ video::-webkit-media-text-track-container {
     background-color: rgba(244, 67, 54, 1.62);
 }
 
+.navbar-link{
+    list-style: none;
+    font-size: 21px;
+    color: #00bcd4;
+}
+
+.navbar-child-link{
+    list-style: none;
+    font-size: 17px;
+}
+
+.quality{
+    background: rgba(0, 0, 0, 0.82);
+    position: absolute;
+    width: 95%;
+    top: 68%;
+}
+
 .media-grid-item .year {
     top: 201px;
     left: 13px;
+    display: none;
+}
+
+.movie-detail-info td,.movie-detail-info th {
+    padding: 10px;
+}
+
+
+.logo{
+    font-family: 'Gloria Hallelujah', cursive;
+    font-size: 30px;
+    color: #f4c9f5;
+    padding: 20px;
+    text-align: center;
+}
+.list-group-item {
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+    margin-bottom: -1px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+}
+
+.search-section{
+    width:90%;
+    height: 400px;
+    overflow-y: scroll;
+}
+.search-section li{
+    list-style: none;
+}
+.search-section img {
+    width: 100%;
+    float: left;
+}
+.search-section .name{
+    color:black;
 }

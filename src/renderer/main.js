@@ -327,14 +327,15 @@ const dispatchHandlers = {
 
 
     'torrentDetail': (torrent) => {
-        state.torrentDetail = torrent;
+        state.torrent = torrent;
+        state.meta = {request: false};
         state.location.go({url: 'torrent-detail-page'})
     },
     'torrentFetchMetaDataRequest': (torrentLink) => {
         controllers.torrentFetch().getMetaData(torrentLink)
     },
     'torrentFetchMetaDataSuccess': (metaInfo) => {
-        state.torrentDetail.meta = metaInfo;
+        state.meta = metaInfo;
     },
     'torrentFetchSearch': (nameTorrent) => {
         controllers.torrentFetch().fetchFindTorrent(nameTorrent);
