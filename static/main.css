@@ -999,9 +999,12 @@ video::-webkit-media-text-track-container {
 }
 
 .media-grid-item {
-    height: 300px;
-    margin-left: 15px;
-    margin-right: 15px;
+    height: 294px;
+    padding: 17px;
+    margin: 15px;
+    border-radius: 25px 10px;
+    position: relative;
+    background: #242425;
 }
 
 .media-grid-item .item-img {
@@ -1010,9 +1013,9 @@ video::-webkit-media-text-track-container {
     color: rgba(0, 0, 0, 0.82);
 }
 
-.item-img img {
-    height: 223px;
-    width: 160px;
+.item-img {
+    max-height: 80%;
+    width: 100%;
 }
 
 .media-grid-item .raiting, .year {
@@ -1043,9 +1046,6 @@ video::-webkit-media-text-track-container {
 
 .quality{
     background: rgba(0, 0, 0, 0.82);
-    position: absolute;
-    width: 95%;
-    top: 68%;
 }
 
 .media-grid-item .year {

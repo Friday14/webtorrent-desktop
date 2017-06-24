@@ -41,19 +41,18 @@ module.exports = class TorrentList extends React.Component {
     }
 
     render() {
-
         const contents = [];
         contents.push(
             <div key="push">
-                <div key="menu" className="col-md-2" >
+                <div key="menu" className="col-md-2 col-xs-3 col-lg-2">
                     <Navbar/>
                 </div>
-                
+
                 <div key="cont" className="col-md-10" style={{overflow: 'hidden'}}>
                     {
                         (this.state.torrentList.length !== 0) ?
                             <div className="col-md-12">
-                                {this.renderTorrentList()} 
+                                {this.renderTorrentList()}
                             </div>
                             :
                             <LinearProgress/>
@@ -86,27 +85,8 @@ module.exports = class TorrentList extends React.Component {
 
 
     renderTorrentList() {
-        const {torrentList} = this.state
-        
+        const {torrentList} = this.state;
         return <MediaGrid items={torrentList}/>
-        
-        return (<GridList
-            cellHeight={190}
-            cols={5}>
-
-         {torrentList.map(function (item, key) {
-                
-                return <GridTile
-                    onClick={dispatcher('torrentDetail', item)}
-                    key={'keyTorrent-' + key}
-                    title={ item.name + ' rait:' + item.raiting}
-                    subtitle={item.name}>
-                    <img src={item.img}/>
-                </GridTile>
-            })
-            }
-
-        </GridList>)
     }
 
 
@@ -125,8 +105,7 @@ module.exports = class TorrentList extends React.Component {
             let $ = cheerio.load(body);
             $(".m-right .plate.showcase .tiles").find('.tile').map((key, item) => {
                 let elem = $(item);
-                if (elem.find('.name').text())
-                {
+                if (elem.find('.name').text()) {
                     arrayMovies[arrayMovies.length] = {
                         name: elem.find('.name').text(),
                         img: elem.find('img').attr('src'),
@@ -134,7 +113,8 @@ module.exports = class TorrentList extends React.Component {
                         quality: elem.find('.quality').text(),
                         raiting: elem.find('span.rating').text(),
                         year: elem.find('span.year').text()
-                    };}
+                    };
+                }
             });
             this.setState({torrentList: [...this.state.torrentList, ...arrayMovies]});
 

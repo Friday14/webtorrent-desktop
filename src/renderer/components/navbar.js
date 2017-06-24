@@ -15,11 +15,11 @@ module.exports = class NavBar extends React.Component {
                 {
                     name: 'Фильмы',
                     action: () => state.location.go({url: 'home'}),
-                    home: true, 
-                    children: [
+                    home: true,
+                    children: [/*
                         {name: 'Израбнное'},
                         {name: 'Комедии'},
-                ]
+                    */]
                 },
                 {name: 'Загрузки', action: () => state.location.go({url: 'torrent-download-list'})},
 
@@ -28,8 +28,8 @@ module.exports = class NavBar extends React.Component {
     }
 
     render() {
-        return <div style={{position: 'fixed'}}>
-        <div className="logo">  Friday Movie </div> 
+        return <div>
+            <div className="logo"> Friday Movie</div>
             <div className="sidebar-category sidebar-category-visible">
                 <div className="category-content no-padding">
                     <ul className="navigation navigation-main navigation-accordion">
@@ -37,7 +37,8 @@ module.exports = class NavBar extends React.Component {
                     </ul>
                 </div>
 
-                <input ref="findInput" onChange={this.searchHandler.bind(this)} type="text" placeholder="Поиск" className="form-control"/>
+                <input ref="findInput" onChange={this.searchHandler.bind(this)} type="text" placeholder="Поиск"
+                       className="form-control"/>
                 {this.renderSearchResult(``)}
             </div>
         </div>
@@ -65,21 +66,34 @@ module.exports = class NavBar extends React.Component {
         });
     }
 
-    renderSearchResult()
-    {
-        if(this.state.searchResult)
-        {
+    renderSearchResult() {
+        if (this.state.searchResult) {
             return <div>
-            {
-                this.state.searchResult.map( (item) => {
-                     return <div> 
-                        <img src={item.img} className="img-responsive" style={{width:'140px'}}/>
-                        
-                            <span className="name"> {item.name}</span>
-                            <button className="btn btn-primary">Просмотр</button> 
-                    </div>
-                })
-            }
+                <ul className="list-group">
+                    {
+                        this.state.searchResult.map((item) => {
+                            return <li
+                                style={ {height: '110px', cursor: 'pointer'} }
+                                className="list-group-item"
+                                onClick={dispatcher('torrentDetail', item)}
+                            >
+
+                                <img style={
+                                    {
+                                        float: 'left',
+                                        height: '106px',
+                                        padding: '8px',
+                                        maxHeight: '90px'
+                                    }
+                                }
+                                     src={item.img} className="img-responsive"/>
+
+
+                                <span style={ {fontSize: '12px', color: 'black'} }> {item.name}</span>
+                            </li>
+                        })
+                    }
+                </ul>
             </div>
         }
     }
